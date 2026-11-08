@@ -21,11 +21,14 @@ export default function AppTabs() {
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
         <CustomTabList>
-          <TabTrigger name="home" href="/" asChild>
-            <TabButton>Home</TabButton>
+          <TabTrigger name="index" href="/" asChild>
+            <TabButton>About</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+          <TabTrigger name="epages" href="/epages" asChild>
+            <TabButton>epages</TabButton>
+          </TabTrigger>
+          <TabTrigger name="plancraft" href="/plancraft" asChild>
+            <TabButton>plancraft</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -34,8 +37,10 @@ export default function AppTabs() {
 }
 
 export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+  // The slot's `ref` targets the native tab trigger element; Pressable manages its own ref on web.
+  const { ref: _slotRef, ...pressableProps } = props;
   return (
-    <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable {...pressableProps} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView
         type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
         style={styles.tabButtonView}>
