@@ -1,0 +1,74 @@
+name: Deploy to production
+run_name: Release ${{ github.ref_name }} (${{ github.sha }})
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  fingerprint:
+    name: Fingerprint
+    type: fingerprint
+    environment: production
+
+  get_android_build:
+    name: Check for existing Android build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: android
+      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+      profile: production
+      channel: production
+
+  get_ios_build:
+    name: Check for existing iOS build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: ios
+      fingerprint_hash: ${{ needs.fingerprint.outputs.ios_fingerprint_hash }}
+      profile: production
+      channel: production
+
+  build_android:
+    name: Build Android (production)
+    needs: [get_android_build]
+    if: ${{ !needs.get_android_build.outputs.build_id }}
+    type: build
+    params:
+      platform: android
+      profile: production
+      message: 'Release ${{ github.sha }} — ${{ github.commit_message }}'
+
+  build_ios:
+    name: Build iOS (production)
+    needs: [get_ios_build]
+    if: ${{ !needs.get_ios_build.outputs.build_id }}
+    type: build
+    params:
+      platform: ios
+      profile: production
+      message: 'Release ${{ github.sha }} — ${{ github.commit_message }}'
+
+  publish_android_update:
+    name: Publish Android update (production)
+    needs: [get_android_build]
+    if: ${{ needs.get_android_build.outputs.build_id }}
+    type: update
+    params:
+      platform: android
+      channel: production
+      message: 'Release ${{ github.sha }} — ${{ github.commit_message }}'
+
+  publish_ios_update:
+    name: Publish iOS update (production)
+    needs: [get_ios_build]
+    if: ${{ needs.get_ios_build.outputs.build_id }}
+    type: update
+    params:
+      platform: ios
+      channel: production
+      message: 'Release ${{ github.sha }} — ${{ github.commit_message }}'

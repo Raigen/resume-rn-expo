@@ -1,31 +1,33 @@
 import { NativeTabs } from 'expo-router/native-tabs';
-import { useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { resume } from '@/data/resume';
+import { selectionHaptic } from '@/lib/haptics';
 
+const { epages, plancraft } = resume.experience;
+
+/** Native tab bar (UITabBarController / Material bottom navigation). */
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
-
   return (
-    <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
-      <NativeTabs.Trigger name="index">
+    <NativeTabs screenListeners={{ tabPress: () => selectionHaptic() }}>
+      <NativeTabs.Trigger name="(about)">
         <NativeTabs.Trigger.Label>About</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
+          sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }}
+          md="person"
         />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="epages">
-        <NativeTabs.Trigger.Label>epages</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{epages.shortName}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'bag', selected: 'bag.fill' }} md="storefront" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="plancraft">
-        <NativeTabs.Trigger.Label>plancraft</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{plancraft.shortName}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'hammer', selected: 'hammer.fill' }}
+          md="construction"
+        />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

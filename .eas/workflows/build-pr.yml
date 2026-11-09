@@ -1,0 +1,74 @@
+name: Build PR
+run_name: 'Build PR #${{ github.event.pull_request.number }}'
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+    if: ${{ !github.event.pull_request.draft }}
+
+jobs:
+  fingerprint:
+    name: Fingerprint
+    type: fingerprint
+    environment: preview
+
+  get_android_build:
+    name: Check for existing Android build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: android
+      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+      profile: staging
+      channel: staging
+
+  get_ios_build:
+    name: Check for existing iOS build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: ios
+      fingerprint_hash: ${{ needs.fingerprint.outputs.ios_fingerprint_hash }}
+      profile: staging
+      channel: staging
+
+  build_android:
+    name: Build Android (staging)
+    needs: [get_android_build]
+    if: ${{ !needs.get_android_build.outputs.build_id }}
+    type: build
+    params:
+      platform: android
+      profile: staging
+      message: 'PR #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }}'
+
+  build_ios:
+    name: Build iOS (staging)
+    needs: [get_ios_build]
+    if: ${{ !needs.get_ios_build.outputs.build_id }}
+    type: build
+    params:
+      platform: ios
+      profile: staging
+      message: 'PR #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }}'
+
+  publish_update:
+    name: Publish PR update
+    type: update
+    environment: preview
+    params:
+      branch: pr-${{ github.event.pull_request.number }}
+      message: 'PR #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }}'
+
+  comment_on_pr:
+    name: Comment on PR
+    after: [build_android, build_ios, publish_update]
+    type: github-comment
+    params:
+      message: 'PR #${{ github.event.pull_request.number }} preview is ready — test it via the update link/QR code below, or install the staging build.'
